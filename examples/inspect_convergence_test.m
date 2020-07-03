@@ -1,12 +1,11 @@
 %% Examine convergence test output
-clear
 clc
 close all
 
-%% Load results
-outfile = 'convtable.mat';
-out = load(outfile);
-T = out.T;
+%% Load results in workspace
+% outfile = 'convtable.mat';
+% out = load(outfile);
+% T = out.T;
 disp(T)
 
 %% Let's extract some numbers
