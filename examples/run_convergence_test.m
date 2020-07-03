@@ -4,8 +4,8 @@ clc
 close all
 
 %% Choose layer numbers to investigate
-N = [128];
-nx = [32];
+N = [512, 1024, 2048, 4096, 8129, 16384, 32768];
+nx = [32, 64, 128, 256, 512];
 
 %% The experiment MAY be mildly sensitive to the chosen density model
 rho0 = 0.199;
@@ -45,6 +45,7 @@ for j=1:length(N)
         T.J2(row) = cmp.J2;
         T.cmp(row) = cmp;
         fprintf('done.\n')
+        save
     end
 end
 fprintf('All done. (%s)\n',seconds2human(sum(T.runtime)));
