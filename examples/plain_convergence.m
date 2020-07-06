@@ -1,25 +1,20 @@
-%% How many layers before convergence?
-clear
-clc
-close all
+function T = plain_convergence(N,nx,dprof,zgrid,testname)
 
-%% Choose layer numbers and lambda grid to investigate
-N = [16,32];
-nx = N;
-zgrid = @(n)linspace(1, 1/n, n); % equally spaced radii
-testname = 'linear_allx';
+if nargin < 5
+    fprintf('Usage:\n\tplain_convergence(N,nx,dprof,zgrid,testname)\n')
+    fprintf('\tzgrid(n) returns a lambda grid.\n')
+    fprintf('\tdprof(z) returns a density profile.\n')
+    return
+end
 
-%% This experiment may be moderately sensitive to the density profile used
-dprof = @(z)-z.^2 + 1; % simple planetary quadratic
-
-%% Create a table to store experiment results
+% Create a table to store experiment results
 vars = {'N','nx','J2','runtime'};
 tps = {'double','double','double','double'};
 T = table('Size', [length(N), length(vars)],...
     'VariableTypes', tps,...
     'VariableNames', vars);
 
-%% Run cms, this may take a while
+% Run cms, this may take a while
 fprintf("Running CMS, this may take a while!\n")
 
 for j=1:length(N)
@@ -30,11 +25,11 @@ for j=1:length(N)
     zvec = zgrid(N(j));
     dvec = dprof(zvec);
     qrot = 0.1;
-    tic; [Js, out] = cms(zvec, dvec, qrot, 'xlayers', nx(j), 'tol', 1e-10);
+    tic; Js = cms(zvec, dvec, qrot, 'xlayers', nx(j), 'tol', 1e-10);
     T.runtime(j) = toc;
     T.J2(j) = Js(2);
     fprintf('done (%d sec).\n',T.runtime(j))
-    save
+    save(testname, 'T')
 end
 fprintf('All done. (%s)\n',seconds2human(sum(T.runtime)));
 save(testname, 'T')
