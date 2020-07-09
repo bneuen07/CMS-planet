@@ -24,10 +24,10 @@ M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
 N = 2048;
-xlayers = 64;
+xlayers = 32;
 cmp = CMSPlanet;
 cmp.ai = R*lambdas.best(N);
-cmp.rhoi = linspace(1/N, 1, N);
+cmp.rhoi = linspace(0, 1, N);
 cmp.name = [int2str(cmp.N),'-layer CMS'];
 cmp.mass = M;
 cmp.radius = R;
@@ -43,13 +43,13 @@ eos.name = '$P\propto\rho^2$';
 cmp.eos = eos;
 
 %% To speed up convergence start with an approximate density structure
-a = sqrt(2*pi*G/K);
-r = pi/a;
-rho_av = 3*M/(4*pi*r^3);
-rho_c = (pi^2/3)*rho_av;
-x = (cmp.ai(1:end-1) + cmp.ai(2:end))/2;
-x(end+1) = cmp.ai(end)/2;
-cmp.rhoi = rho_c*sin(a*x)./(a*x);
+% a = sqrt(2*pi*G/K);
+% r = pi/a;
+% rho_av = 3*M/(4*pi*r^3);
+% rho_c = (pi^2/3)*rho_av;
+% x = (cmp.ai(1:end-1) + cmp.ai(2:end))/2;
+% x(end+1) = cmp.ai(end)/2;
+% cmp.rhoi = rho_c*sin(a*x)./(a*x);
 
 %% Relax to desired barotrope
 cmp.opts.MaxIterBar = 40;
@@ -58,32 +58,28 @@ cmp.opts.dJtol = 1e-6;
 cmp.relax_to_barotrope;
 
 %% Compare computed and analytic density structure
-q = cmp.qrot;
-% Zharkov & Trubistyn (1978) eq. 34.12
-ZT3 = [q;...
-    (0.173273*q - 0.197027*q^2 + 0.15*q^3)*1e2;...
-    (-0.081092*q^2 + 0.15*q^3)*-1e4;...
-    (0.056329*q^3)*1e5;...
-    nan; nan; nan];
-% Hubbard (2013) Table 5
-H13_256 = [q; 1.3991574; 5.3182810; 3.0118323; 2.1321157; 1.7406710; 1.5682179];
-H13_512 = [q; 1.3989253; 5.3187997; 3.0122356; 2.1324628; 1.7409925; 1.5685327];
-
-% CMSPlanet
-CMP = [q; cmp.Js(2)*1e2; -cmp.Js(3)*1e4; cmp.Js(4)*1e5; -cmp.Js(5)*1e6;...
-    cmp.Js(6)*1e7; -cmp.Js(7)*1e8;];
-
-% Make it a table
-T = table(ZT3, H13_256, H13_512, CMP);
-T.Properties.RowNames = {'q','J2x10^2','-J4x10^4','J6x10^5','-J8x10^6',...
-    'J10x10^7','-J12x10^8'};
-
-% Display
-format long
-format compact
-disp(T)
-format
-try
-    cmp.plot_barotrope('showinput',true,'showscaledinput',true);
-catch
-end
+% q = cmp.qrot;
+% % Zharkov & Trubistyn (1978) eq. 34.12
+% ZT3 = [q;...
+%     (0.173273*q - 0.197027*q^2 + 0.15*q^3)*1e2;...
+%     (-0.081092*q^2 + 0.15*q^3)*-1e4;...
+%     (0.056329*q^3)*1e5;...
+%     nan; nan; nan];
+% % Hubbard (2013) Table 5
+% H13_256 = [q; 1.3991574; 5.3182810; 3.0118323; 2.1321157; 1.7406710; 1.5682179];
+% H13_512 = [q; 1.3989253; 5.3187997; 3.0122356; 2.1324628; 1.7409925; 1.5685327];
+% 
+% % CMSPlanet
+% CMP = [q; cmp.Js(2)*1e2; -cmp.Js(3)*1e4; cmp.Js(4)*1e5; -cmp.Js(5)*1e6;...
+%     cmp.Js(6)*1e7; -cmp.Js(7)*1e8;];
+% 
+% % Make it a table
+% T = table(ZT3, H13_256, H13_512, CMP);
+% T.Properties.RowNames = {'q','J2x10^2','-J4x10^4','J6x10^5','-J8x10^6',...
+%     'J10x10^7','-J12x10^8'};
+% 
+% % Display
+% format long
+% format compact
+% disp(T)
+% format
