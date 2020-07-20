@@ -23,8 +23,8 @@ G = si.gravity;
 M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
-N = 2048;
-xlayers = 32;
+xlayers = 512;
+N = 256*xlayers;
 cmp = CMSPlanet;
 cmp.ai = R*lambdas.best(N);
 cmp.rhoi = linspace(0, 1, N);
@@ -34,6 +34,7 @@ cmp.radius = R;
 cmp.renormalize();
 cmp.qrot = 0.089195487; % Hubbard (2013) Table 5
 cmp.P0 = 0*si.bar;
+cmp.rhoi(2) = 0;
 
 %% Construct a polytrope of index 1 to represent the planet's eos
 n = 1;
@@ -52,9 +53,9 @@ cmp.eos = eos;
 % cmp.rhoi = rho_c*sin(a*x)./(a*x);
 
 %% Relax to desired barotrope
-cmp.opts.MaxIterBar = 40;
+cmp.opts.MaxIterBar = 60;
 cmp.opts.xlayers = xlayers;
-cmp.opts.dJtol = 1e-6;
+cmp.opts.dJtol = 1e-7;
 cmp.relax_to_barotrope;
 
 %% Compare computed and analytic density structure
