@@ -13,17 +13,14 @@
 clear
 clc
 close all
-%addpath(fullfile(pwd,'..'))
-try
-    si = setUnits; % if you have physunits
-catch
-    si = setFUnits; % if you don't have physunits
-end
+si = setFUnits;
 G = si.gravity;
 
 %% Set up a CMS object and give it a density profile linear in lambda to start
 N = 128;
-cms = ConcentricMaclaurinSpheroids(N);
+nx = 128;
+cmp = CMSPlanet;
+cmp.opts.xlayers = nx;
 
 % The lambda array follows Hubbard's IDL code
 dl = 1/(N - 1);
@@ -32,45 +29,40 @@ lam(2) = 1 - dl/2;
 for k=3:N
     lam(k) = lam(k-1) - dl;
 end
-cms.lambdas = lam;
+cmp.ai = lam;
 
 % The deltas array follows Hubard's IDL code
-cms.deltas(1) = 0;
-cms.deltas(2:end) = dl;
+deltas(N) = 0;
+deltas(2:end) = dl;
+cmp.rhoi = cumsum(deltas);
 
-cms.qrot = 0.088822426; % Hubbard (2013) Table 1
+cmp.qrot = 0.088822426; % Hubbard (2013) Table 1
 
 %% Relax to hydrostatic equilibrium
-cms.opts.verbosity = 2;
-cms.opts.MaxIterHE = 40;
-cms.opts.dJtol = 1e-12;
-cms.opts.email = '';
-cms.relax;
+cmp.relax_to_HE;
 
 %% After initial relaxation, we iteratively fix deltas ss and re-relax
-iter = 0;
 for iter=1:20
     fprintf('\n  Fixing density profile to mean radii - iteration %i\n', iter)
 
     % Following setup_linear_iterated.pro
-    sos0 = cms.ss/cms.ss(1);
+    sos0 = cmp.si/cmp.s0;
     dsos0 = [-diff(sos0); sos0(end)];
-    dlambda = [-diff(cms.lambdas); cms.lambdas(end)];
+    dlambda = [-diff(cmp.CMS.lambdas); cmp.CMS.lambdas(end)];
     delta0 = [0; ones(N-1,1)/(N-1)];
     new_deltas = delta0.*dsos0./dlambda;
     
-    delta_deltas = sum(abs(new_deltas - cms.deltas));
+    delta_deltas = sum(abs(new_deltas - cmp.CMS.deltas));
     fprintf('  deltas array modified by < %g.\n\n',delta_deltas)
-    cms.deltas = new_deltas;
+    cmp.rhoi = cumsum(new_deltas);
     if delta_deltas < 1e-12, break, end
-    cms.relax;
+    cmp.relax_to_HE;
 end
 fprintf('  Density profile fixed.\n')
 
 %% Compare computed and analytic density structure
-q = cms.qrot;
-s3 = cms.bs(1); % mean radius, s^3=b*a^2 but a=1
-m = q*s3;
+q = cmp.qrot;
+m = cmp.mrot;
 
 % Zharkov & Trubistyn (1978) Table 3.1
 ZT5 = [nan; 0.0830; 1.4798; 5.929; 3.497; 2.52; 2.4; nan; nan];
@@ -79,8 +71,8 @@ H13_128 = [q; 0.082999915; 1.4798138; 5.9269129; 3.4935680; 2.5493209;...
     2.1308951; 1.9564143; 1.9237724];
 
 % CMSPlanet
-CMP = [q; m; cms.Jn(2)*1e2; -cms.Jn(4)*1e4; cms.Jn(6)*1e5; -cms.Jn(8)*1e6;...
-    cms.Jn(10)*1e7; -cms.Jn(12)*1e8; cms.Jn(14)*1e9];
+CMP = [q; m; cmp.J2*1e2; -cmp.J4*1e4; cmp.J6*1e5; -cmp.J8*1e6;...
+    cmp.Js(6)*1e7; -cmp.Js(7)*1e8; cmp.Js(8)*1e9];
 
 % Make it a table
 T = table(ZT5, H13_128, CMP);
@@ -95,10 +87,4 @@ disp(T)
 format
 
 %% Save and deliver
-% save('linear_density_model', 'cms', 'T')
-% try
-% sendmail('address','n=1 polytrope','','index1polytrope.mat')
-% catch
-% end
-% !shutdown /s /t 30
-% exit force
+save('linear_density_model.mat', 'cmp', 'T')
